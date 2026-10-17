@@ -5,7 +5,8 @@
   "description": "Explorador geográfico y meteorológico en español",
   "scripts": {
     "start": "node scripts/serve.mjs",
-    "check": "node --check app.js && node --check config.js && node --test tests/weather.test.mjs",
+    "check": "node --check app.js && node --check config.js && node --check scripts/serve.mjs && node --test tests/*.test.mjs",
     "build": "node scripts/build.mjs"
-  }
+  },
+  "engines": { "node": ">=20" }
 }

@@ -1,74 +1,48 @@
 # Atmósfera · API-crima
 
-Aplicación web de exploración geográfica y meteorológica en español, basada en la práctica «Aplicación Web de Mapa Meteorológico Integral».
-
-## Estado actual
-
-- Mapa interactivo de OpenStreetMap con marcador y enlace a mapa completo.
-- Ciudades de demostración: Lerma, Monterrey, Madrid y Ciudad de México (también `CDMX`).
-- Coordenadas, temperatura, humedad, presión y condición del cielo.
-- **El clima es simulado**, identificado en pantalla. Lerma conserva 27.4 °C y 91 % de humedad, como indica la práctica; los demás valores son deterministas, no observaciones reales.
-- Búsqueda global y meteorología real pendientes de conectar los proveedores que el propietario suministre.
-- Interfaz adaptable a móvil, formulario accesible y manejo de errores, respuestas inválidas y tiempos de espera.
+Mapa de OpenStreetMap, búsqueda mundial con Nominatim y condiciones actuales estimadas por Open-Meteo. Temperatura °C, humedad %, presión de superficie hPa y condición WMO. No se sustituyen los errores por datos simulados.
 
 ## Ejecutar
 
-Requiere Node.js 20 o superior. No necesita instalar dependencias.
+Node.js 20 o superior, sin dependencias:
 
 ```bash
 npm start
 ```
 
-Abre http://127.0.0.1:4173. El mapa y las fuentes web requieren Internet; hay fuentes de sistema como alternativa.
+Abre http://127.0.0.1:4173. Requiere Internet. El servidor sirve la web y `/api/places?q=ciudad`, `/api/weather?lat=19&lon=-99`. Las cuatro sugerencias usan coordenadas predefinidas para ahorrar consultas geográficas; su clima sí viene del proveedor.
 
 ```bash
 npm run check
 npm run build
 ```
 
-`dist/` contiene los archivos estáticos para desplegar. También puedes publicar directamente la raíz del repositorio.
+## Producción
 
-## Conectar APIs
+**Necesita alojamiento con Node. GitHub Pages por sí solo no ejecuta las APIs.**
 
-Edita las URLs públicas de `config.js`. Los contratos de integración son:
+En Render u otro servicio Node conecta este repositorio; build `npm run check`, inicio `npm start`, variable `HOST=0.0.0.0`. El puerto se toma de `PORT`. Se incluye `render.yaml` para un Blueprint de Render. No se ha activado hosting; el despliegue queda a cargo del propietario.
 
-**Geocodificación:** `GET <geocodingEndpoint>?q=Madrid`
+Usa **una sola instancia/proceso**: la caché y el límite global de Nominatim se comparten en ese proceso. Para escalar necesitas un limitador y caché compartidos o cambiar de proveedor. Las cachés viven en memoria, admiten 500 entradas por servicio y se pierden al reiniciar.
 
-```json
-[{ "name": "Madrid", "description": "Comunidad de Madrid, España", "lat": 40.4168, "lon": -3.7038 }]
-```
+`npm run build` genera solo frontend en `dist/`. Publicar esa carpeta sin el servidor no habilita las APIs. Si separas frontend/backend debes adaptar `config.js` y configurar CORS en el backend.
 
-Devuelve `[]` cuando no encuentre resultados. Las cuatro ciudades predefinidas se resuelven localmente; las demás consultan este endpoint y se conservan en caché durante la sesión. La búsqueda solo se dispara al enviar el formulario, sin autocompletado remoto.
+## Proveedores
 
-**Meteorología:** `GET <weatherEndpoint>?lat=40.4168&lon=-3.7038`
+- **OpenStreetMap:** mapa embebido con atribución visible.
+- **Nominatim:** búsquedas manuales sin autocompletado, caché de 24 horas y solicitudes identificadas por User-Agent. El servidor permite una solicitud cada 1.1 segundos, sin concurrencia; devuelve 429 para reintentar cuando está ocupado. Revisa su [política de uso](https://operations.osmfoundation.org/policies/nominatim/): máximo una solicitud por segundo para toda la aplicación, sin búsquedas masivas. No envíes datos personales confidenciales. `NOMINATIM_URL` permite cambiar de servicio compatible mediante variable del servidor.
+- **Open-Meteo:** [Forecast API](https://open-meteo.com/en/docs), condiciones actuales basadas en modelos y caché de cinco minutos. Muestra la fecha del dato del proveedor. La API pública no requiere clave para uso no comercial sujeto a sus [términos](https://open-meteo.com/en/terms). Para uso comercial o mayor volumen revisa el plan correspondiente. Atribución y licencia CC BY 4.0 visibles en la web.
+- **OpenWeatherMap:** alternativa pendiente, no activada porque requiere una API key. La aplicación funciona con Open-Meteo sin esa clave. Para cambiar de proveedor hay que adaptar su respuesta y guardar la clave en variables de entorno del servidor.
 
-```json
-{ "temperature": 22.5, "humidity": 60, "pressure": 1013, "condition": "Parcialmente nublado" }
-```
-
-Unidades: °C, %, hPa. Cuando se configura meteorología real, un fallo deja el clima como no disponible, sin sustituirlo por valores simulados. Conectar un proveedor requerirá adaptar su respuesta a este contrato.
-
-**No subas claves privadas a GitHub ni a `config.js`.** Usa un backend o función del alojamiento que guarde esas claves en variables de entorno. Los endpoints deben aceptar peticiones desde el dominio de la web (CORS). GitHub Pages sirve archivos estáticos y no ejecuta ese backend.
-
-El documento propone Nominatim. El servicio público no se ha activado: antes de usarlo debes revisar su [política de uso](https://operations.osmfoundation.org/policies/nominatim/), respetar el máximo agregado de una solicitud por segundo, identificar la aplicación, mostrar atribución, cachear consultas y evitar autocompletado. Para producción, integra un proveedor adecuado o un proxy que gestione esos límites globalmente.
-
-## Publicar por tu cuenta
-
-### GitHub Pages
-
-En el repositorio, abre **Settings → Pages → Deploy from a branch**, selecciona **main**, carpeta **/ (root)** y guarda. No hace falta build ni workflow para esta opción. La dirección habitual será https://ricardo502.github.io/API-crima/ una vez activado Pages.
-
-### Otro alojamiento estático
-
-Comando de build: `npm run build`. Directorio de salida: `dist`. No requiere SPA rewrites. Las rutas de los recursos son relativas y funcionan bajo `/API-crima/`.
+No subas claves privadas a GitHub ni a `config.js`.
 
 ## Archivos
 
 - `index.html`, `style.css`: interfaz.
-- `app.js`: búsqueda, peticiones, estados y mapa.
-- `weather.mjs`: demostración y validación de contratos.
-- `config.js`: endpoints públicos.
-- `scripts/`: servidor local y build sin dependencias.
-- `tests/`: validación de datos y demostración.
+- `app.js`, `config.js`: interacción y endpoints públicos.
+- `weather.mjs`: lugares sugeridos, validación y utilidades de demostración heredadas (inactivas con la configuración actual).
+- `scripts/providers.mjs`: integraciones, caché y limitador.
+- `scripts/serve.mjs`: servidor y rutas API; solo sirve archivos de frontend permitidos.
+- `tests/`: validadores e integraciones con respuestas controladas.
 
-Cartografía © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright). El mapa se carga desde el visor de OpenStreetMap. Las fuentes DM Sans y Manrope se solicitan a Google Fonts.
+Cartografía © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright). Meteorología: [Open-Meteo](https://open-meteo.com/). Fuentes Google Fonts con alternativa de sistema.

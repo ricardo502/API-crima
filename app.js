@@ -14,7 +14,10 @@ async function getJSON(endpoint, params) {
   const timer = setTimeout(() => controller.abort(), 12000);
   try {
     const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json' } });
-    if (!response.ok) throw new Error(response.status === 429 ? 'Demasiadas consultas. Intenta de nuevo en un momento.' : 'No se pudo consultar el servicio. Intenta de nuevo.');
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || (response.status === 429 ? 'Demasiadas consultas. Intenta de nuevo en un momento.' : 'No se pudo consultar el servicio. Intenta de nuevo.'));
+    }
     return await response.json();
   } catch (error) {
     if (error.name === 'AbortError') throw new Error('El servicio tardó demasiado. Intenta de nuevo.');
@@ -43,9 +46,9 @@ function renderWeather(weather, real) {
   $('condition').textContent = weather.condition;
   $('humidity-bar').style.width = `${weather.humidity}%`;
   $('weather-symbol').textContent = /lluvia|tormenta/i.test(weather.condition) ? '☂' : /nublado/i.test(weather.condition) ? '☁' : '☀';
-  $('data-source').textContent = real ? 'API METEOROLÓGICA' : 'DATOS SIMULADOS';
+  $('data-source').textContent = real ? 'OPEN-METEO · MODELO ACTUAL' : 'DATOS SIMULADOS';
   $('result-status').textContent = real ? '● Datos meteorológicos recibidos' : '● Vista de demostración lista';
-  $('updated').textContent = real ? `Consultado a las ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` : 'Pendiente de API meteorológica';
+  $('updated').textContent = real ? `Datos: ${new Date(weather.time).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}` : 'Pendiente de API meteorológica';
 }
 
 function clearWeather() {
@@ -105,7 +108,7 @@ document.querySelectorAll('[data-city]').forEach(button => button.addEventListen
 }));
 renderPlace(activePlace);
 if (config.weatherEndpoint) {
-  document.querySelector('.live-tag').textContent = 'API CONECTADA';
-  $('mode-note').textContent = 'Clima consultado mediante el servicio configurado. El mapa requiere conexión a Internet.';
+  document.querySelector('.live-tag').textContent = 'CLIMA ACTUAL';
+  $('mode-note').textContent = 'Condiciones actuales estimadas por Open-Meteo. Busca una ciudad al enviar el formulario; geografía de Nominatim y OpenStreetMap.';
   search(activePlace.name);
 } else renderWeather(demoWeather(activePlace), false);
