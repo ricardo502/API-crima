@@ -1,10 +1,12 @@
-import { PLACES, normalize, findDemoPlace, validatePlace, validateWeather, demoWeather } from './weather.mjs';
+import { PLACES, normalize, findDemoPlace, validatePlace, demoWeather } from './weather.mjs';
+import { parsePlaces, parseOpenMeteo, forecastParams } from './api.mjs';
 
 const $ = id => document.getElementById(id);
 const config = window.APP_CONFIG || {};
 let activePlace = PLACES[0];
 let busy = false;
 const cache = new Map();
+const weatherCache = new Map();
 
 async function getJSON(endpoint, params) {
   const url = new URL(endpoint, window.location.href);
@@ -16,7 +18,7 @@ async function getJSON(endpoint, params) {
     const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/json' } });
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
-      throw new Error(body.error || (response.status === 429 ? 'Demasiadas consultas. Intenta de nuevo en un momento.' : 'No se pudo consultar el servicio. Intenta de nuevo.'));
+      throw new Error(body.reason || (typeof body.error === 'string' ? body.error : '') || (response.status === 429 ? 'Demasiadas consultas. Intenta de nuevo en un momento.' : 'No se pudo consultar el servicio. Intenta de nuevo.'));
     }
     return await response.json();
   } catch (error) {
@@ -74,7 +76,7 @@ async function search(query) {
     const key = normalize(query);
     let place = cache.get(key) || findDemoPlace(query);
     if (!place && config.geocodingEndpoint) {
-      const results = await getJSON(config.geocodingEndpoint, { q: query });
+      const results = parsePlaces(await getJSON(config.geocodingEndpoint, { name: query, count: 1, language: 'es', format: 'json' }));
       if (!Array.isArray(results)) throw new Error('La API geográfica devolvió una respuesta inválida.');
       if (!results.length) throw new Error('No encontramos ese lugar. Prueba con ciudad y país.');
       place = validatePlace(results[0]);
@@ -86,7 +88,14 @@ async function search(query) {
     if (config.weatherEndpoint) {
       clearWeather();
       $('status').textContent = 'Ubicación encontrada. Consultando el clima…';
-      renderWeather(validateWeather(await getJSON(config.weatherEndpoint, { lat: place.lat, lon: place.lon })), true);
+      const weatherKey = `${place.lat},${place.lon}`;
+      let cachedWeather = weatherCache.get(weatherKey);
+      if (!cachedWeather || cachedWeather.expires <= Date.now()) {
+        cachedWeather = { value: parseOpenMeteo(await getJSON(config.weatherEndpoint, forecastParams(place))), expires: Date.now() + 300000 };
+        if (weatherCache.size >= 100) weatherCache.delete(weatherCache.keys().next().value);
+        weatherCache.set(weatherKey, cachedWeather);
+      }
+      renderWeather(cachedWeather.value, true);
     } else renderWeather(demoWeather(place), false);
     $('status').textContent = `Ubicación encontrada: ${place.name}.${config.weatherEndpoint ? '' : ' Clima de demostración.'}`;
   } catch (error) {
@@ -109,6 +118,6 @@ document.querySelectorAll('[data-city]').forEach(button => button.addEventListen
 renderPlace(activePlace);
 if (config.weatherEndpoint) {
   document.querySelector('.live-tag').textContent = 'CLIMA ACTUAL';
-  $('mode-note').textContent = 'Condiciones actuales estimadas por Open-Meteo. Busca una ciudad al enviar el formulario; geografía de Nominatim y OpenStreetMap.';
+  $('mode-note').textContent = 'Condiciones actuales y búsqueda de ciudades con Open-Meteo. Mapa de OpenStreetMap. Funciona directamente desde este sitio.';
   search(activePlace.name);
 } else renderWeather(demoWeather(activePlace), false);

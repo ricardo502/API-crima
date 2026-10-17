@@ -4,9 +4,8 @@
   "private": true,
   "description": "Explorador geográfico y meteorológico en español",
   "scripts": {
-    "start": "node --use-system-ca scripts/serve.mjs",
-    "check": "node --check app.js && node --check config.js && node --check scripts/serve.mjs && node --test tests/*.test.mjs",
-    "build": "node scripts/build.mjs"
+    "start": "node scripts/serve.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
-  "engines": { "node": ">=22.19.0" }
+  "engines": { "node": ">=20" }
 }

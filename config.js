@@ -1,6 +1,6 @@
 // Solo configuración pública. Nunca coloques claves privadas en este archivo.
-// Rutas del servidor Node que consulta y adapta las APIs de los proveedores.
+// APIs públicas consultadas directamente desde el navegador en GitHub Pages.
 window.APP_CONFIG = Object.freeze({
-  geocodingEndpoint: '/api/places',
-  weatherEndpoint: '/api/weather',
+  geocodingEndpoint: 'https://geocoding-api.open-meteo.com/v1/search',
+  weatherEndpoint: 'https://api.open-meteo.com/v1/forecast',
 });
