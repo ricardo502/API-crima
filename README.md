@@ -4,7 +4,7 @@ Mapa de OpenStreetMap, búsqueda mundial con Nominatim y condiciones actuales es
 
 ## Ejecutar
 
-Node.js 20 o superior, sin dependencias:
+Node.js 22.19 o superior (recomendado 24), sin dependencias. El inicio usa el almacén de certificados del sistema además del de Node, manteniendo activa la validación HTTPS:
 
 ```bash
 npm start
