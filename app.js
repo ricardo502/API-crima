@@ -119,5 +119,7 @@ renderPlace(activePlace);
 if (config.weatherEndpoint) {
   document.querySelector('.live-tag').textContent = 'CLIMA ACTUAL';
   $('mode-note').textContent = 'Condiciones actuales y búsqueda de ciudades con Open-Meteo. Mapa de OpenStreetMap. Funciona directamente desde este sitio.';
-  search(activePlace.name);
+  const initialCity = new URLSearchParams(window.location.search).get('city')?.trim();
+  if (initialCity) $('city-input').value = initialCity;
+  search(initialCity || activePlace.name);
 } else renderWeather(demoWeather(activePlace), false);

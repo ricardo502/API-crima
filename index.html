@@ -8,7 +8,7 @@
   <title>Atmósfera · Mapa meteorológico</title>
   <link rel="stylesheet" href="style.css">
   <script src="config.js" defer></script>
-  <script src="app.js" type="module"></script>
+  <script src="browser.js?v=2" defer></script>
 </head>
 <body>
   <header class="topbar"><a class="brand" href="./"><span class="brand-icon">◉</span> atmósfera<span class="brand-dot">.</span></a><span class="top-label">EXPLORADOR METEOROLÓGICO</span><a class="repo" href="https://github.com/ricardo502/API-crima" target="_blank" rel="noopener noreferrer">Ver proyecto ↗</a></header>
@@ -26,7 +26,7 @@
       </aside>
       <div class="results" id="weather-card" aria-busy="false">
         <div class="location-header"><div><p class="eyebrow">TU PUNTO EN EL MUNDO</p><h2 id="place-name">Lerma</h2><p id="place-description">Estado de México, México</p></div><span class="location-icon" aria-hidden="true">⌖</span></div>
-        <div class="map-wrap"><iframe id="map" title="Mapa de la ubicación seleccionada" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe><a id="map-link" class="map-link" target="_blank" rel="noopener noreferrer">Ampliar mapa ↗</a></div>
+        <div class="map-wrap"><iframe id="map" src="https://www.openstreetmap.org/export/embed.html?bbox=-99.5865%2C19.2416%2C-99.4365%2C19.3316&amp;layer=mapnik&amp;marker=19.2866%2C-99.5115" title="Mapa de la ubicación seleccionada" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe><a id="map-link" href="https://www.openstreetmap.org/?mlat=19.2866&amp;mlon=-99.5115#map=13/19.2866/-99.5115" class="map-link" target="_blank" rel="noopener noreferrer">Ampliar mapa ↗</a></div>
         <div class="coordinates"><span>LATITUD <strong id="latitude">19.2866°</strong></span><span>LONGITUD <strong id="longitude">−99.5115°</strong></span><span class="coordinate-label">WGS 84</span></div>
         <div class="weather-heading"><span class="eyebrow">02 / CONDICIONES DEL CIELO</span><span class="demo-label" id="data-source">CONSULTANDO CLIMA</span></div>
         <div class="weather-grid"><div class="temperature"><span class="weather-symbol" id="weather-symbol" aria-hidden="true">☁</span><div><div class="temperature-value"><span id="temperature">—</span><span>°C</span></div><p id="condition">Consultando condiciones…</p></div></div><div class="metric"><span>Humedad</span><strong><span id="humidity">—</span><small> %</small></strong><div class="humidity-track"><div id="humidity-bar" style="width:0"></div></div></div><div class="metric"><span>Presión</span><strong><span id="pressure">—</span><small> hPa</small></strong><span class="metric-foot">Presión atmosférica</span></div></div>

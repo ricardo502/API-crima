@@ -15,6 +15,8 @@ Dirección esperada: **https://ricardo502.github.io/API-crima/**.
 
 ## Cómo funciona
 
+También puedes abrir `index.html` directamente desde la carpeta: `browser.js` es un script clásico que evita el bloqueo de módulos en URLs `file://`. El mapa y las APIs requieren Internet. `browser.js` está incluido en el repositorio, listo para usar, sin compilación. Para mantenimiento del código fuente existe `scripts/sync-browser.mjs`, que no forma parte del despliegue.
+
 El navegador consulta directamente las APIs públicas de Open-Meteo mediante HTTPS:
 
 - Búsqueda: `https://geocoding-api.open-meteo.com/v1/search`.
